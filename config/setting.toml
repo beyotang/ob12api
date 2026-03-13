@@ -1,5 +1,5 @@
 [global]
-api_key = "eric.123456"
+api_key = "123456"
 
 [server]
 host = "0.0.0.0"
