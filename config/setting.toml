@@ -1,9 +1,9 @@
 [global]
-api_key = "your-api-key"
+api_key = "eric.123456"
 
 [server]
 host = "0.0.0.0"
-port = 8081
+port = 7860
 
 [admin]
 username = "admin"
