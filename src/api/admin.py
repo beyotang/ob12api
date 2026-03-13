@@ -94,15 +94,43 @@ async def import_accounts(req: ImportRequest):
     return {"ok": True, "imported": count}
 
 
+class PushRequest(BaseModel):
+    refresh_tokens: list[str]
+
+
 @router.post("/accounts/push")
-async def push_accounts(req: ImportRequest, request: Request):
-    """外部推送账号接口，使用 API Key 鉴权（无需登录）"""
+async def push_accounts(req: PushRequest, request: Request):
+    """外部推送账号接口，只需 refresh_token，服务端自动刷新获取完整信息"""
     from ..core.auth import _extract_token
     token = _extract_token(request)
     if not token or not _km or not _km.validate(token):
         return JSONResponse(status_code=401, content={"ok": False, "message": "Invalid API Key"})
-    count = _tm.import_accounts(req.accounts)
-    return {"ok": True, "imported": count}
+
+    imported = 0
+    errors = []
+    for rt in req.refresh_tokens:
+        rt = rt.strip()
+        if not rt:
+            continue
+        # 构造临时账号，只填 refresh_token，让 refresh_account 补全其余字段
+        existing_rts = {a.refresh_token for a in _tm._accounts}
+        if rt in existing_rts:
+            errors.append({"refresh_token": rt[:20] + "...", "error": "已存在"})
+            continue
+        from ..services.token_manager import Account
+        acct = Account({"refresh_token": rt, "expires_at": 0})
+        _tm._accounts.append(acct)
+        idx = len(_tm._accounts) - 1
+        ok = await _tm.refresh_account(idx, force=True)
+        if ok:
+            imported += 1
+        else:
+            _tm._accounts.pop(idx)
+            errors.append({"refresh_token": rt[:20] + "...", "error": "刷新失败"})
+
+    if imported:
+        _tm._save()
+    return {"ok": True, "imported": imported, "errors": errors}
 
 
 class BatchDeleteRequest(BaseModel):
