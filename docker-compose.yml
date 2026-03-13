@@ -3,7 +3,7 @@ services:
   ob12api:
     build: .
     ports:
-      - "8081:8081"
+      - "7860:7860"
     volumes:
       - ./config:/app/config
       - ./data:/app/data
