@@ -17,7 +17,7 @@ max_retries = 3
 retry_delay = 1
 
 [ob1]
-credentials_path = ""
+credentials_path = "config/credentials.json"
 workos_auth_url = "https://api.workos.com/user_management/authenticate"
 workos_client_id = "client_01K8YDZSSKDMK8GYTEHBAW4N4S"
 api_base = "https://dashboard.openblocklabs.com/api/v1"
